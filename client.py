@@ -1,16 +1,17 @@
 from socket import *
 
 serverName = 'localhost'
-serverPort = 12000
+serverPort = 53
 
 clientSocket = socket(AF_INET, AF_INET)
 
-message = input("Input lowercase sentence: ")
+#message = input("Input lowercase sentence: ")
+query = input("Enter name of website: ")
 
-clientSocket.sendto(message.encode(), (serverName, serverPort))
+clientSocket.sendto(query.encode(), (serverName, serverPort))
 
-modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
+response, serverAddress = clientSocket.recvfrom(2048)
 
-print(modifiedMessage.decode())
+print(response.decode())
 
 clientSocket.close()
