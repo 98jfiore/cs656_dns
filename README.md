@@ -29,3 +29,7 @@ for this project, representing Internet addresses.
 for A records, then this is the IP address (4 octets). If the type is 0x0005 for CNAMEs, then this
 is the name of the alias. If the type is 0x0002 for name servers, then this is the name of the
 server. Finally if the type is 0x000f for mail servers, the format is
+
+
+
+* https://www2.cs.duke.edu/courses/fall16/compsci356/DNS/DNS-primer.pdf
