@@ -9,5 +9,6 @@ print("The server is ready to receive")
 
 while True:
     query, clientAddress = serverSocket.recvfrom(2048)
-    response = query.decode().upper()
-    serverSocket.sendto(response.encode(), clientAddress)
+    #response = query.decode().upper()
+    #serverSocket.sendto(response.encode(), clientAddress)
+    serverSocket.sendto(query, clientAddress)
