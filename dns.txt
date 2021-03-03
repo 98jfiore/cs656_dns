@@ -1,4 +1,4 @@
-api.njit.com. 59 IN A 208.93.64.253
+api.njit.com 59 IN A 208.93.64.253
 apis.google.com 84 IN A 172.217.10.238
 dyna.wikimedia.org 423 IN A 208.80.154.224
 drawisland.com 6965 IN A 213.186.33.19
