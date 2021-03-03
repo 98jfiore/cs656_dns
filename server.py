@@ -1,5 +1,8 @@
 from socket import *
 import struct
+from os.path import dirname, join
+current_dir = dirname(__file__)
+
 serverName = 'localhost'
 serverPort = 53
 serverSocket = socket(AF_INET, SOCK_DGRAM)
@@ -11,7 +14,8 @@ print("The server is ready to receive")
 while True:
     message, clientAddress = serverSocket.recvfrom(2048)
     query = 'api.njit.com'
-    txtfile = open("dns.txt", "r")
+    txtfile_path = join(current_dir, "./dns.txt")
+    txtfile = open(txtfile_path, "r")
     readtext = txtfile.readlines()
     for record in readtext:
         if query in record:
