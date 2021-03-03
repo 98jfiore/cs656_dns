@@ -112,6 +112,8 @@ footer_bytes = footer.to_bytes(4, 'big')
 #print(int.from_bytes(footer_bytes, "big"))
 
 message = header_bytes + query_bytes + footer_bytes
+#message = query.encode("utf-8") #hemali - test
+#'prior message encoded \xae\xd9\x01\x00\x00\x00\x00\x01\x00\x00\x00\x003api4njit3edu0\x00\x01\x00\x01
 # print(message)
 # print(message[:12])
 # print(message[12:-4])
@@ -121,6 +123,7 @@ clientSocket.sendto(message, (serverName, serverPort))
 
 response, serverAddress = clientSocket.recvfrom(2048)
 
-print(response)
+#print(response)
+print(response.decode())
 
 clientSocket.close()
