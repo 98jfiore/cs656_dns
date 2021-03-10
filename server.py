@@ -1,5 +1,6 @@
 from socket import *
 import struct
+import re
 serverName = 'localhost'
 serverPort = 53
 serverSocket = socket(AF_INET, SOCK_DGRAM)
@@ -10,13 +11,16 @@ print("The server is ready to receive")
 
 while True:
     message, clientAddress = serverSocket.recvfrom(2048)
-    query = 'api.njit.com'
+    strqueryencode = str(message[12:-4])
+    pattern = r'[0-9]'
+    querydecode = re.sub(pattern, '.', strqueryencode)
+    querystrip = querydecode.split("'.")[1]
+    query = querystrip.split(".'")[0]
     txtfile = open("dns.txt", "r")
     readtext = txtfile.readlines()
     for record in readtext:
         if query in record:
             answer = (record.split("\n")[0])
-            #print(answer)
             send = answer.encode()
             serverSocket.sendto(send, clientAddress)
 
