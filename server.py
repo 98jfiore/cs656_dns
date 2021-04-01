@@ -4,6 +4,10 @@ import re
 from os.path import dirname, join
 current_dir = dirname(__file__)
 
+
+txtfile = open(join(current_dir, "dns.txt"), "r")
+readtext = txtfile.readlines()
+
 serverName = 'localhost'
 serverPort = 53
 serverSocket = socket(AF_INET, SOCK_DGRAM)
@@ -18,13 +22,18 @@ while True:
     querydecode = re.sub(pattern, '.', strqueryencode)
     querystrip = querydecode.split("'.")[1]
     query = querystrip.split(".'")[0]
-    txtfile = open("dns.txt", "r")
-    readtext = txtfile.readlines()
+    print(query)
+    sent = False
     for record in readtext:
         if query in record:
             answer = (record.split("\n")[0])
             send = answer.encode()
             serverSocket.sendto(send, clientAddress)
+            sent = True
+            break
+    if not sent:
+        answer = ""
+        serverSocket.sendto(answer.encode(), clientAddress)
 
 #DNS ANSWER PACKET FORMAT - PENDING
 #NAME The domain name that was queried, in the same format as the QNAME in the questions.
