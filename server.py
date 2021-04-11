@@ -17,23 +17,72 @@ print("The server is ready to receive")
 
 while True:
     message, clientAddress = serverSocket.recvfrom(2048)
+    #print(message)
+    queryencode = (message[12:-4])
+    queryencode2 = (message[11:-4])
     strqueryencode = str(message[12:-4])
     pattern = r'[0-9]'
     querydecode = re.sub(pattern, '.', strqueryencode)
     querystrip = querydecode.split("'.")[1]
     query = querystrip.split(".'")[0]
-    print(query)
-    sent = False
+    #print(queryencode2)
+
+    found = False
+
     for record in readtext:
         if query in record:
             answer = (record.split("\n")[0])
-            send = answer.encode()
-            serverSocket.sendto(send, clientAddress)
-            sent = True
+            ttl = int(answer.split(" ")[1]) #59
+            clas = answer.split(" ")[2] #IN
+            type = answer.split(" ")[3] #A
+            data = answer.split(" ")[4] #208.56.54.454
+            a = int(data.split(".")[0])
+            b = int(data.split(".")[1])
+            c = int(data.split(".")[2])
+            d = int(data.split(".")[3])
+            qlenght = len(data) #10
+
+            #print(clas)
+            #print(ttl)
+            #print(a,b,c,d)
+
+            clasencode= clas.encode()
+            typeencode= type.encode()
+            dataencode = data.encode()
+
+            class_typepack = struct.pack("!ss", typeencode, clasencode)
+            #print(class_typepack)
+
+            querypack = struct.pack("!{}s".format(len(queryencode2)), queryencode2)
+            #print(querypack)
+
+            ttlpack = struct.pack("!i", ttl)
+            #print(ttlpack)
+
+            lenpack = struct.pack("!i", qlenght)
+            #print(lenpack)
+
+            datapack = struct.pack("!iiii", a, b, c, d)
+            #print(datapack)
+
+            pack_all = querypack + class_typepack  + ttlpack + lenpack + datapack
+            #print(pack_all)
+
+            serverSocket.sendto(pack_all, clientAddress)
+
+            found = True
             break
-    if not sent:
-        answer = ""
+    if not found:
+        answer = query
         serverSocket.sendto(answer.encode(), clientAddress)
+
+#NAME
+#TYPE
+#CLASS
+#TTL
+#RDLENGTH
+#RDATA
+
 
 #DNS ANSWER PACKET FORMAT - PENDING
 #NAME The domain name that was queried, in the same format as the QNAME in the questions.
