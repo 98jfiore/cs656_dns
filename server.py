@@ -34,7 +34,7 @@ while True:
             answer = (record.split("\n")[0])
             ttl = int(answer.split(" ")[1]) #59
             clas = answer.split(" ")[2] #IN
-            type = answer.split(" ")[3] #A
+            query_type = answer.split(" ")[3] #A
             data = answer.split(" ")[4] #208.56.54.454
             a = int(data.split(".")[0])
             b = int(data.split(".")[1])
@@ -47,26 +47,33 @@ while True:
             #print(a,b,c,d)
 
             clasencode= clas.encode()
-            typeencode= type.encode()
+            typeencode= query_type.encode()
             dataencode = data.encode()
+            #ttlencode = repr(ttl).encode('utf-8')
+            #qenconde = repr(qlenght).encode('utf-8')
+
 
             class_typepack = struct.pack("!ss", typeencode, clasencode)
-            #print(class_typepack)
+            print(class_typepack)
 
             querypack = struct.pack("!{}s".format(len(queryencode2)), queryencode2)
-            #print(querypack)
+            print(querypack)
 
-            ttlpack = struct.pack("!i", ttl)
+            ttl_len_datapack = struct.pack("!iiiiii", ttl, qlenght, a, b, c, d)
+            print(ttl_len_datapack)
+
+            #ttlpack = struct.pack("!i", ttl)
             #print(ttlpack)
 
-            lenpack = struct.pack("!i", qlenght)
+            #lenpack = struct.pack("!i", qlenght)
             #print(lenpack)
 
-            datapack = struct.pack("!iiii", a, b, c, d)
+            #datapack = struct.pack("!iiii", a, b, c, d)
             #print(datapack)
 
-            pack_all = querypack + class_typepack  + ttlpack + lenpack + datapack
-            #print(pack_all)
+            #pack_all = querypack + class_typepack + ttlpack + lenpack + datapack
+            pack_all = querypack + class_typepack + ttl_len_datapack
+            print(pack_all)
 
             serverSocket.sendto(pack_all, clientAddress)
 
