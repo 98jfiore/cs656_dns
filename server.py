@@ -59,8 +59,8 @@ while True:
     #Opcode is next 4 bits, we are doing a standard query so it is 0
     response_flags = response_flags << 4
     #Next bit is 1 if this is an authoritative name server, which it is
-    response_flags += 1
     response_flags = response_flags << 1
+    response_flags += 1
     #Next bit is to indicate if the reply is truncated, this is not
     response_flags = response_flags << 1
     #Next bit is if you want recursion from the server, this is a response
@@ -75,12 +75,6 @@ while True:
     #Figure out how many questions there are
     num_questions = int.from_bytes(message[4:6], "big")
 
-    #There should be no RRs.
-
-    response_first_header = response_ident
-    response_first_header = response_first_header << 16
-    response_first_header += response_flags
-    rfh_bytes = response_first_header.to_bytes(4, 'big')
 
     num_answers = 0
     answers = b''
@@ -99,7 +93,6 @@ while True:
             point_in_query += qname_next_sect_bytes + 1
             qname_next_sect_bytes = int.from_bytes(queries[point_in_query - 1:point_in_query], "big")
         query_name = query_name[0:-1]
-        #print(query_name)
         
         queryencoded = queries[0:point_in_query]
         queries = queries[point_in_query:]
@@ -111,16 +104,13 @@ while True:
         #We only have A records, so the if type's not 1, we won't check.
         #We also only return IP addresses so if class isn't 1, we won't check
         if(query_type == 1 and query_class == 1):
+            found = False
             for record in readtext:
                 if query_name in record:
                     answer = (record.split("\n")[0])
                     ttl = int(answer.split(" ")[1]) #59
                     clas = answer.split(" ")[2] #IN
                     query_type = answer.split(" ")[3] #A
-
-                    #print(clas)
-                    #print(ttl)
-                    #print(a,b,c,d)
 
                     answer_bytes = queryencoded
                     resource_bytes = b''
@@ -164,13 +154,23 @@ while True:
                     answers += answer_bytes
                     num_answers += 1
 
+                    found = True
                     break
+            if not found:
+                response_flags = response_flags | 3
+
+
+    response_first_header = response_ident
+    response_first_header = response_first_header << 16
+    response_first_header += response_flags
+    rfh_bytes = response_first_header.to_bytes(4, 'big')
 
     response_sec_header = 0
     response_sec_header = response_sec_header << 16
     response_sec_header += num_answers
     rsh_bytes = response_sec_header.to_bytes(4, 'big')
 
+    #There should be no RRs.
     response_third_header = 0
     rth_bytes = response_third_header.to_bytes(4, 'big')
 

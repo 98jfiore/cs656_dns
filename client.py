@@ -85,6 +85,7 @@ for i in range(len(query)-1, -1, -1):
         non_dot_count += 1
 query_name_bytes = non_dot_count.to_bytes(1, "big") + this_part.encode('utf-8') + query_name_bytes
 
+
 #Set up query type
 #Type A has a value of 1
 query_type = 1
@@ -114,12 +115,92 @@ message = header_bytes + query_name_bytes + footer_bytes
 
 clientSocket.sendto(message, (serverName, serverPort))
 
-response, serverAddress = clientSocket.recvfrom(2048)
+received = False
+while(not received):
+    print("Receiving")
+    response, serverAddress = clientSocket.recvfrom(2048)
 
-response_ident = int.from_bytes(response[0:2], "big")
-response_flags = response[2:4]
-print(response_ident)
-print(ident)
+    response_ident = int.from_bytes(response[0:2], "big")
+    if(response_ident != ident):
+        continue
+
+    response_flags = int.from_bytes(response[2:4], "big")
+    #Rcode should be 1, if not drop
+    if response_flags & 15 != 0:
+        if response_flags & 15 == 3:
+            print("Name Error")
+            break
+        else:
+            print(response_flags & 15)
+        continue
+    response_flags = response_flags >> 4
+    #Move over zero field
+    response_flags = response_flags >> 3
+    #Next bit is recusion available, ignore
+    response_flags = response_flags >> 1
+    #Next bit is recusion desired, ignore
+    response_flags = response_flags >> 1
+    #Next bit is truncated, this is for udp, ignore it
+    response_flags = response_flags >> 1
+    #Next bit is authoritative answer, 
+    if response_flags & 1 == 1:
+        print("Authoritative Answer")
+    response_flags = response_flags >> 1
+    #We're only set up to handle opcode 0
+    if response_flags & 15 > 0:
+        print("Received a non-zero opcode")
+        continue
+    response_flags = response_flags >> 4
+    #Next bit is QR, it should be 0, for query
+    if response_flags & 1 != 1:
+        print("Not a response")
+        continue
+    response_flags = response_flags >> 1
+
+    num_recv_qustions = int.from_bytes(response[4:6], "big")
+    num_answers = int.from_bytes(response[6:8], "big")
+    num_authority_rrs = int.from_bytes(response[8:10], "big")
+    num_additional_rrs = int.from_bytes(response[10:12], "big")
+
+    response = response[12:]
+
+    if(num_recv_qustions != 0):
+        print("Received questions")
+        continue
+
+    for i in range(num_answers):
+        #Get the query name you are looking for
+        r_domain_name = ""
+        point_in_dom = 1
+        dname_next_sect_bytes = int.from_bytes(response[0:1], "big")
+        while(dname_next_sect_bytes != 0):
+            dom_next_sect = response[point_in_dom : point_in_dom + dname_next_sect_bytes].decode('utf-8')
+            r_domain_name += dom_next_sect
+            r_domain_name += '.'
+            point_in_dom += dname_next_sect_bytes + 1
+            dname_next_sect_bytes = int.from_bytes(response[point_in_dom - 1:point_in_dom], "big")
+        r_domain_name = r_domain_name[0:-1]
+        
+        response = response[point_in_dom:]
+
+        ans_type = int.from_bytes(response[0:2], 'big')
+        ans_class = int.from_bytes(response[2:4], 'big')
+        response = response[4:]
+
+        r_ttl = int.from_bytes(response[0:4], "big")
+        response = response[4:]
+
+        data_len = int.from_bytes(response[0:2], "big")
+        response = response[2:]
+
+        if(ans_type == 1 and data_len == 4):
+            a = int.from_bytes(response[0:1], "big")
+            b = int.from_bytes(response[1:2], "big")
+            c = int.from_bytes(response[2:3], "big")
+            d = int.from_bytes(response[3:4], "big")
+            print(r_domain_name + ": " + str(a) + "." + str(b) + "." + str(c) + "." + str(d) + " ttl " + str(r_ttl))
+            received = True
+
 #print(response)
 
 clientSocket.close()
