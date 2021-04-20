@@ -16,7 +16,7 @@ first_header = 0
 ident = np.random.randint(0, 65535)
 
 #Put the identifier in the header
-header = ident
+first_header = ident
 
 #Set up the 16 bits of flags
 flags = 0
@@ -40,7 +40,7 @@ flags = flags << 3
 flags = flags << 4
 
 #Put the flags in the header
-first_header = header << 16
+first_header = first_header << 16
 first_header += flags
 
 
@@ -52,8 +52,7 @@ num_questions = 1
 second_header = num_questions
 
 #Next 16 bits is the number of answers, this is a query so it's zero
-second_header << 16
-
+second_header = second_header << 16
 
 
 #Set up third header (32 bits)
@@ -62,35 +61,29 @@ third_header = 0
 #Third header is about resource record counts, which as a query this does not have
 
 #Convert header to bytes
-header = first_header
-header = header << 32
-header += second_header
-header = header << 32
-header += third_header
+fh_bytes = first_header.to_bytes(4, "big")
+sh_bytes = second_header.to_bytes(4, "big")
+th_bytes = third_header.to_bytes(4, "big")
 
 #Header is 12 bytes
-header_bytes = header.to_bytes(12, 'big')
-#print(header_bytes)
+header_bytes = fh_bytes + sh_bytes + th_bytes
 
-#print(int.from_bytes(header_bytes, "big"))
 #Convert query into a queryname
-query_name = "0"
+zero = 0
+query_name_bytes = zero.to_bytes(1, "big")
 
 non_dot_count = 0
+this_part = ''
 for i in range(len(query)-1, -1, -1):
     this_char = query[i]
     if (this_char == '.'):
-        query_name = str(non_dot_count) + query_name
+        query_name_bytes = non_dot_count.to_bytes(1, "big") + this_part.encode('utf-8') + query_name_bytes
+        this_part = ''
         non_dot_count = 0
     else:
-        query_name = this_char + query_name
+        this_part = this_char + this_part
         non_dot_count += 1
-query_name = str(non_dot_count) + query_name
-
-#Convert query_name to bytes
-query_bytes = query_name.encode('utf-8')
-#print(query_bytes)
-#print(query_bytes.decode('utf-8'))
+query_name_bytes = non_dot_count.to_bytes(1, "big") + this_part.encode('utf-8') + query_name_bytes
 
 #Set up query type
 #Type A has a value of 1
@@ -111,7 +104,7 @@ footer_bytes = footer.to_bytes(4, 'big')
 
 #print(int.from_bytes(footer_bytes, "big"))
 
-message = header_bytes + query_bytes + footer_bytes
+message = header_bytes + query_name_bytes + footer_bytes
 #message = query.encode("utf-8") #hemali - test
 #'prior message encoded \xae\xd9\x01\x00\x00\x00\x00\x01\x00\x00\x00\x003api4njit3edu0\x00\x01\x00\x01
 # print(message)
@@ -123,7 +116,10 @@ clientSocket.sendto(message, (serverName, serverPort))
 
 response, serverAddress = clientSocket.recvfrom(2048)
 
+response_ident = int.from_bytes(response[0:2], "big")
+response_flags = response[2:4]
+print(response_ident)
+print(ident)
 #print(response)
-print(response.decode())
 
 clientSocket.close()
