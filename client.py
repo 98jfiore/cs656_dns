@@ -188,7 +188,7 @@ while(not received):
             b = int.from_bytes(response[1:2], "big")
             c = int.from_bytes(response[2:3], "big")
             d = int.from_bytes(response[3:4], "big")
-            print(r_domain_name + ": " + str(a) + "." + str(b) + "." + str(c) + "." + str(d) + " ttl " + str(r_ttl))
+            print(r_domain_name + ": " + str(a) + "." + str(b) + "." + str(c) + "." + str(d) + "\nttl " + str(r_ttl))
             received = True
 
 #print(response)
