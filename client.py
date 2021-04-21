@@ -99,19 +99,9 @@ footer = query_type
 footer = footer << 16
 footer += query_class
 
-#print(footer)
 footer_bytes = footer.to_bytes(4, 'big')
-#print(footer_bytes)
-
-#print(int.from_bytes(footer_bytes, "big"))
 
 message = header_bytes + query_name_bytes + footer_bytes
-#message = query.encode("utf-8") #hemali - test
-#'prior message encoded \xae\xd9\x01\x00\x00\x00\x00\x01\x00\x00\x00\x003api4njit3edu0\x00\x01\x00\x01
-# print(message)
-# print(message[:12])
-# print(message[12:-4])
-# print(message[-4:])
 
 clientSocket.sendto(message, (serverName, serverPort))
 
